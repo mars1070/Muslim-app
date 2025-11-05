@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run copy-sw",
-    "copy-sw": "copyfiles -u 1 sw.js dist",
+    "copy-sw": "copyfiles sw.js dist",
     "preview": "vite preview"
   },
   "dependencies": {
