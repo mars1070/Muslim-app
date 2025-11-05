@@ -1,0 +1,5 @@
+{
+  "name": "Rappels Islamiques",
+  "description": "Une application web mobile-first qui affiche des rappels islamiques aléatoires avec des arrière-plans uniques. Conçue pour l'inspiration quotidienne et le partage facile sur les réseaux sociaux.",
+  "requestFramePermissions": []
+}
