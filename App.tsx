@@ -146,7 +146,7 @@ const App: React.FC = () => {
           rel="noopener noreferrer"
           className="text-white/70 text-sm font-montserrat font-semibold uppercase tracking-wider no-underline hover:text-white transition-colors"
         >
-          www.sabrbracelet.com
+          sabrbracelet.com
         </a>
       </footer>
     </main>
