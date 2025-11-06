@@ -22,6 +22,11 @@ export default defineConfig(({ mode }) => {
         outDir: 'dist',
         assetsDir: 'assets',
         sourcemap: !isProduction,
+        rollupOptions: {
+          input: {
+            main: path.resolve(__dirname, 'index.html')
+          }
+        }
       },
       resolve: {
         alias: {
