@@ -44,12 +44,13 @@ const App: React.FC = () => {
     }
   }, []); // Exécuté une seule fois au montage
 
-  // Fonction pour obtenir une image de fond aléatoire depuis le dossier local
+  // Fonction pour obtenir une image de fond aléatoire depuis le dossier public
   const getRandomBackgroundImage = useCallback((reminderId: string): string => {
     // Utilisation de l'ID du rappel pour sélectionner une image de manière déterministe
     // Cela permet d'avoir la même image pour le même rappel
     const imageNumber = (reminderId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % TOTAL_IMAGES_AVAILABLE) + 1;
-    return `/Images%20Muslim%20WEBP/${imageNumber}.webp`;
+    // Utilisation d'un chemin relatif depuis la racine du site
+    return `/Images Muslim WEBP/${imageNumber}.webp`;
   }, []);
 
   // Effet pour charger l'image de fond à chaque fois que le rappel change
