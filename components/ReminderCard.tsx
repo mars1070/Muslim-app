@@ -5,35 +5,18 @@ interface ReminderCardProps {
   reminder: Reminder;
 }
 
-const getSourceText = (reminder: Reminder): string => {
-  if (reminder.type === 'coran') {
-    const { surahName, surahNumber, verseNumber } = reminder.source;
-    return `Sourate ${surahName} (${surahNumber}:${verseNumber})`;
-  } else {
-    const { collection, hadithNumber, grading } = reminder.source;
-    let sourceText = collection;
-    if (hadithNumber) {
-      sourceText += ` n°${hadithNumber}`;
-    }
-    if (grading) {
-      sourceText += `, ${grading}`;
-    }
-    return sourceText;
-  }
-};
-
 const ReminderCard: React.FC<ReminderCardProps> = ({ reminder }) => {
   const textShadow = { textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' };
-
-  // Utilisation d'une taille de police fixe pour une cohérence visuelle,
-  // plus grande que la plus petite taille précédente, comme demandé.
-  const fontSizeClass = 'text-xl md:text-2xl';
-  // Taille de police arabe réduite pour un meilleur équilibre visuel.
-  const arabicFontSizeClass = 'text-xl md:text-2xl';
+  
+  // Tailles de police adaptatives
+  const titleSize = 'text-base sm:text-lg';
+  const arabicSize = 'text-lg sm:text-xl';
+  const frenchSize = 'text-lg sm:text-xl';
+  const sourceSize = 'text-sm sm:text-base';
 
   return (
-    <div className="w-full max-w-md text-center flex flex-col items-center justify-center p-4">
-      <p style={textShadow} className="text-base text-gray-200 mb-6">
+    <div className="reminder-card w-full max-w-md mx-auto px-4 py-2 flex flex-col items-center relative">
+      <p style={textShadow} className={`text-gray-200 mb-4 text-center ${titleSize}`}>
         {reminder.type === 'hadith' ? 'Le Prophète ﷺ a dit :' : 'Allah ﷻ a dit :'}
       </p>
       
@@ -42,7 +25,7 @@ const ReminderCard: React.FC<ReminderCardProps> = ({ reminder }) => {
           dir="rtl" 
           lang="ar" 
           style={textShadow} 
-          className={`font-amiri text-white mb-4 leading-relaxed ${arabicFontSizeClass}`}
+          className={`font-amiri text-white mb-4 leading-[2.5] text-center ${arabicSize}`}
         >
           {reminder.arabic}
         </p>
@@ -50,15 +33,25 @@ const ReminderCard: React.FC<ReminderCardProps> = ({ reminder }) => {
 
       <p 
         style={textShadow} 
-        className={`font-amiri leading-relaxed text-white transition-all duration-300 ${fontSizeClass}`}
+        className={`font-amiri text-white mb-2 leading-relaxed text-center ${frenchSize}`}
       >
         « {reminder.french} »
       </p>
 
-      <div className="w-24 h-px bg-white/50 my-6"></div>
+      <div className="w-24 h-px bg-white/50 my-2"></div>
       
-      <p style={textShadow} className="text-base text-gray-300 font-light">
-        {getSourceText(reminder)}
+      <p style={textShadow} className={`text-gray-300 font-light text-center ${sourceSize} mt-1`}>
+        {reminder.type === 'coran' ? (
+          <span>
+            Sourate {reminder.source.surahName} ({reminder.source.surahNumber}:{reminder.source.verseNumber})
+          </span>
+        ) : (
+          <span>
+            {reminder.source.collection}
+            {reminder.source.hadithNumber && ` n°${reminder.source.hadithNumber}`}
+            {reminder.source.grading && `, ${reminder.source.grading}`}
+          </span>
+        )}
       </p>
     </div>
   );

@@ -10,7 +10,7 @@ const Header: React.FC = () => {
       <img 
         src={logoUrl} 
         alt="Logo Sabr" 
-        className="mx-auto w-48" // Augmenté pour une meilleure visibilité
+        className="mx-auto w-44" // Augmenté pour une meilleure visibilité
         style={{ filter: 'drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.7))' }}
       />
     </header>

@@ -13,17 +13,8 @@ import PromoPopup from './components/PromoPopup';
 import './services/firebaseService'; // Initialiser Firebase
 
 
-// IMPORTANT : L'URL de votre bucket Firebase Storage.
-// Mise à jour pour correspondre à l'URL fournie par l'utilisateur.
-const FIREBASE_STORAGE_BUCKET = "sabrbracelet-com.firebasestorage.app";
-const FIREBASE_STORAGE_BASE_URL = `https://firebasestorage.googleapis.com/v0/b/${FIREBASE_STORAGE_BUCKET}/o/`;
-
-// Le nombre d'images disponibles est maintenant calculé dynamiquement
-// en fonction du nombre de rappels. Assurez-vous d'avoir au moins autant
-// d'images que de rappels pour une correspondance unique, ou moins si vous
-// acceptez que des images se répètent. Pour cet exemple, nous supposons
-// qu'il y a une image pour chaque rappel.
-const TOTAL_IMAGES_AVAILABLE = 79; // Gardez ceci si le nombre d'images est fixe et indépendant des rappels.
+// Nombre d'images WEBP disponibles dans le dossier public/Images%20Muslim%20WEBP/
+const TOTAL_IMAGES_AVAILABLE = 99; // Nous avons 99 images numérotées de 1 à 99
 
 
 const App: React.FC = () => {
@@ -53,6 +44,14 @@ const App: React.FC = () => {
     }
   }, []); // Exécuté une seule fois au montage
 
+  // Fonction pour obtenir une image de fond aléatoire depuis le dossier local
+  const getRandomBackgroundImage = useCallback((reminderId: string): string => {
+    // Utilisation de l'ID du rappel pour sélectionner une image de manière déterministe
+    // Cela permet d'avoir la même image pour le même rappel
+    const imageNumber = (reminderId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % TOTAL_IMAGES_AVAILABLE) + 1;
+    return `/Images%20Muslim%20WEBP/${imageNumber}.webp`;
+  }, []);
+
   // Effet pour charger l'image de fond à chaque fois que le rappel change
   useEffect(() => {
     if (!reminder) {
@@ -60,8 +59,7 @@ const App: React.FC = () => {
     }
 
     setIsLoading(true);
-    const imageId = (reminder.id % TOTAL_IMAGES_AVAILABLE) + 1;
-    const backgroundUrl = `${FIREBASE_STORAGE_BASE_URL}${imageId}.webp?alt=media`;
+    const backgroundUrl = getRandomBackgroundImage(reminder.id.toString());
 
     const img = new Image();
     img.src = backgroundUrl;
@@ -103,7 +101,7 @@ const App: React.FC = () => {
       className="w-full h-screen overflow-hidden bg-cover bg-center bg-no-repeat transition-all duration-1000"
       style={{ backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none', backgroundColor: '#111827' }}
     >
-      <div className="w-full h-full bg-black bg-opacity-60 flex flex-col items-center p-4 sm:p-6 text-white">
+      <div className="w-full h-full flex flex-col items-center p-4 sm:p-6 text-white">
         {isLoading ? (
           <div className="flex-grow flex items-center justify-center">
             <LoadingSpinner />
@@ -115,21 +113,32 @@ const App: React.FC = () => {
         ) : reminder ? (
           <>
             <div className="w-full max-w-md flex-grow flex flex-col">
-              <Header />
-              <main className="flex-grow-[2] flex flex-col justify-center">
+              <main className="w-full h-full flex items-center justify-center">
                 <ReminderCard reminder={reminder} />
               </main>
               <div className="flex-grow-[1]" /> {/* Espaceur pour pousser le contenu vers le haut */}
             </div>
 
-            <div className="fixed bottom-12 left-0 right-0 px-6">
-              <div className="flex justify-between items-center max-w-md mx-auto">
-                <NextReminderButton onClick={loadNewReminder} />
-                <div className="transform scale-110">
-                  <GiftButton onClick={() => setIsPromoPopupOpen(true)} />
+            <div className="fixed bottom-0 left-0 right-0 px-6 pb-3 pt-4 bg-gradient-to-t from-black/40 to-transparent">
+              <div className="no-screenshot">
+                <div className="flex justify-between items-center max-w-md mx-auto mb-4">
+                  <NextReminderButton onClick={loadNewReminder} />
+                  <div className="transform scale-110">
+                    <GiftButton onClick={() => setIsPromoPopupOpen(true)} />
+                  </div>
+                  <ShareButton reminder={reminder} />
                 </div>
-                <ShareButton reminder={reminder} backgroundImage={backgroundImage} />
               </div>
+              <footer className="text-center">
+                <a 
+                  href="https://www.sabrbracelet.com"
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-white/70 text-sm font-montserrat font-semibold uppercase tracking-wider no-underline hover:text-white transition-colors"
+                >
+                  sabrbracelet.com
+                </a>
+              </footer>
             </div>
           </>
         ) : (
@@ -139,16 +148,6 @@ const App: React.FC = () => {
         )}
       </div>
       {isPromoPopupOpen && <PromoPopup onClose={() => setIsPromoPopupOpen(false)} />}
-      <footer className="absolute bottom-2 left-0 right-0 text-center">
-        <a 
-          href="https://www.sabrbracelet.com"
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-white/70 text-sm font-montserrat font-semibold uppercase tracking-wider no-underline hover:text-white transition-colors"
-        >
-          sabrbracelet.com
-        </a>
-      </footer>
     </main>
   );
 };
