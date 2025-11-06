@@ -25,9 +25,7 @@ export default defineConfig(({ mode }) => {
         sourcemap: !isProduction,
         emptyOutDir: true,
         rollupOptions: {
-          input: {
-            main: path.resolve(__dirname, 'index.html')
-          },
+          input: path.resolve(__dirname, 'index.html'),
           output: {
             entryFileNames: 'assets/[name].[hash].js',
             chunkFileNames: 'assets/[name].[hash].js',
