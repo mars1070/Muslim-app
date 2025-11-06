@@ -49,8 +49,8 @@ const App: React.FC = () => {
     // Utilisation de l'ID du rappel pour sélectionner une image de manière déterministe
     // Cela permet d'avoir la même image pour le même rappel
     const imageNumber = (reminderId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % TOTAL_IMAGES_AVAILABLE) + 1;
-    // Utilisation d'un chemin relatif depuis la racine du site
-    return `/Images Muslim WEBP/${imageNumber}.webp`;
+    // Chemin relatif vers le dossier des images (sans espaces)
+    return `/images/${imageNumber}.webp`;
   }, []);
 
   // Effet pour charger l'image de fond à chaque fois que le rappel change
