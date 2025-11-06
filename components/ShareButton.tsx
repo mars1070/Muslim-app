@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Reminder } from '../types';
 import html2canvas from 'html2canvas';
-import { getRandomScreenshotBackground, preloadScreenshotBackgrounds } from '../utils/screenshotBackgrounds';
+import { getRandomScreenshotBackground, preloadScreenshotBackgrounds } from '../src/utils/screenshotBackgrounds';
 
 interface ShareButtonProps {
   reminder: Reminder;
