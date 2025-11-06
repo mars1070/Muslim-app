@@ -4,7 +4,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-com
 
 // Configuration Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyCzzYJtjTp9Wo05XQjxowF_w_DtU9jkZlM",
+  apiKey: "AIzaSyCzzYJtjTp9Wo05XQjxowF_w_DtU9jkZlM", // Cette valeur sera remplacée par Netlify
   authDomain: "sabrbracelet-com.firebaseapp.com",
   projectId: "sabrbracelet-com",
   storageBucket: "sabrbracelet-com.firebasestorage.app",
