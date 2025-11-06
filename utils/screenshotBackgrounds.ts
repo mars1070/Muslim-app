@@ -1,16 +1,30 @@
 /**
  * Gestion des images de fond pour les captures d'écran
- * Utilise les images locales du dossier Images Muslim WEBP
+ * Utilise les images locales du dossier public/images
  */
+
+// Liste des images de fond disponibles (1 à 10)
+const BACKGROUND_IMAGES = [
+  '/images/1.webp',
+  '/images/2.webp',
+  '/images/3.webp',
+  '/images/4.webp',
+  '/images/5.webp',
+  '/images/6.webp',
+  '/images/7.webp',
+  '/images/8.webp',
+  '/images/9.webp',
+  '/images/10.webp'
+];
 
 /**
  * Retourne le chemin d'une image de fond aléatoire
  * @returns {string} Chemin vers une image WEBP aléatoire
  */
 export const getRandomScreenshotBackground = (): string => {
-  // Génère un nombre aléatoire entre 1 et 99
-  const randomNumber = Math.floor(Math.random() * 99) + 1;
-  return `/Images%20Muslim%20WEBP/${randomNumber}.webp`;
+  // Sélectionne une image aléatoire dans la liste
+  const randomIndex = Math.floor(Math.random() * BACKGROUND_IMAGES.length);
+  return BACKGROUND_IMAGES[randomIndex];
 };
 
 /**
@@ -18,12 +32,11 @@ export const getRandomScreenshotBackground = (): string => {
  * pour améliorer les performances lors de l'affichage
  */
 export const preloadScreenshotBackgrounds = (): void => {
-  // Précharge 5 images aléatoires
-  for (let i = 0; i < 5; i++) {
+  // Précharge toutes les images de fond
+  BACKGROUND_IMAGES.forEach(src => {
     const img = new Image();
-    const randomNumber = Math.floor(Math.random() * 99) + 1;
-    img.src = `/Images%20Muslim%20WEBP/${randomNumber}.webp`;
-  }
+    img.src = src;
+  });
 };
 
 /**
