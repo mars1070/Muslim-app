@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
     const isProduction = mode === 'production';
     
     return {
-      base: '/', // Base URL absolue pour le déploiement
+      base: '/',
       server: {
         port: 3000,
         host: '0.0.0.0',
@@ -29,9 +29,12 @@ export default defineConfig(({ mode }) => {
             main: path.resolve(__dirname, 'index.html')
           },
           output: {
-            entryFileNames: `assets/[name].[hash].js`,
-            chunkFileNames: `assets/[name].[hash].js`,
-            assetFileNames: `assets/[name].[hash].[ext]`
+            entryFileNames: 'assets/[name].[hash].js',
+            chunkFileNames: 'assets/[name].[hash].js',
+            assetFileNames: 'assets/[name].[hash][extname]',
+            manualChunks: {
+              vendor: ['react', 'react-dom']
+            }
           }
         }
       },
