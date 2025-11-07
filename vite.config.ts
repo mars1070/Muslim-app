@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
     const isProduction = mode === 'production';
     
     return {
-      base: '/',
+      base: '/Muslim-app/',
       server: {
         port: 3000,
         host: '0.0.0.0',
