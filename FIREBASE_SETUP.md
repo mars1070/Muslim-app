@@ -39,3 +39,4 @@ Options :
 
 Actuellement, le code obtient le token FCM mais ne peut pas envoyer automatiquement les notifications programmées sans backend. Les notifications seront envoyées uniquement si un backend les envoie aux heures programmées.
 
+

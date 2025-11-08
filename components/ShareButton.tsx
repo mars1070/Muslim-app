@@ -127,91 +127,145 @@ const ShareButton: React.FC<ShareButtonProps> = ({ reminder }) => {
     setIsSharing(true);
     
     try {
-      // Récupérer l'élément à capturer (la zone de capture définie par l'ID 'capture-area')
-      const elementToCapture = document.getElementById('capture-area');
-      if (!elementToCapture) throw new Error("Impossible de trouver l'élément à capturer");
+      // Récupérer l'élément à capturer (l'élément principal avec l'image de fond)
+      const mainElement = document.querySelector('main');
+      if (!mainElement) throw new Error("Impossible de trouver l'élément principal");
       
-      // Ajouter une classe pour masquer les boutons pendant la capture
-      const buttons = document.querySelectorAll('.no-screenshot');
-      buttons.forEach(btn => {
-        btn.classList.add('hidden');
+      // Récupérer l'URL de l'image de fond
+      const backgroundImage = window.getComputedStyle(mainElement).backgroundImage;
+      const backgroundUrl = backgroundImage.replace('url("', '').replace('")', '');
+      
+      // Créer un conteneur pour la capture
+      const captureContainer = document.createElement('div');
+      captureContainer.style.position = 'fixed';
+      captureContainer.style.top = '0';
+      captureContainer.style.left = '0';
+      captureContainer.style.width = '100%';
+      captureContainer.style.height = '100%';
+      captureContainer.style.backgroundImage = `url(${backgroundUrl})`;
+      captureContainer.style.backgroundSize = 'cover';
+      captureContainer.style.backgroundPosition = 'center';
+      captureContainer.style.zIndex = '9999';
+      captureContainer.style.backgroundColor = '#111827'; // Couleur de fond de secours
+      
+      // Créer un élément image pour le fond
+      const backgroundImg = new Image();
+      backgroundImg.crossOrigin = 'anonymous';
+      backgroundImg.src = backgroundUrl;
+      
+      // Attendre que l'image soit chargée
+      await new Promise((resolve) => {
+        if (backgroundImg.complete) {
+          resolve(true);
+        } else {
+          backgroundImg.onload = () => resolve(true);
+          backgroundImg.onerror = () => resolve(false);
+        }
       });
       
-      // Créer un conteneur temporaire pour la capture
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'fixed';
-      tempDiv.style.left = '0';
-      tempDiv.style.top = '0';
-      tempDiv.style.width = '100%';
-      tempDiv.style.height = '100%';
-      tempDiv.style.backgroundColor = '#111827'; // Couleur de fond unie
-      tempDiv.style.zIndex = '9999';
-      tempDiv.style.display = 'flex';
-      tempDiv.style.justifyContent = 'center';
-      tempDiv.style.alignItems = 'center';
-      tempDiv.style.opacity = '0';
-      document.body.appendChild(tempDiv);
+      // Créer un canvas pour le fond
+      const bgCanvas = document.createElement('canvas');
+      bgCanvas.width = backgroundImg.width || window.innerWidth;
+      bgCanvas.height = backgroundImg.height || window.innerHeight;
+      const bgCtx = bgCanvas.getContext('2d');
+      if (bgCtx) {
+        bgCtx.drawImage(backgroundImg, 0, 0, bgCanvas.width, bgCanvas.height);
+        // Appliquer un léger assombrissement si nécessaire
+        bgCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+      }
       
-      // Cloner l'élément à capturer
-      const clone = elementToCapture.cloneNode(true) as HTMLElement;
-      clone.style.width = window.innerWidth + 'px';
-      clone.style.height = 'auto';
-      clone.style.position = 'relative';
-      clone.style.transform = 'none';
-      clone.style.margin = '0';
-      clone.style.padding = '0';
+      // Cloner le contenu à capturer
+      const contentToCapture = document.createElement('div');
+      contentToCapture.style.width = '100%';
+      contentToCapture.style.height = '100%';
+      contentToCapture.style.display = 'flex';
+      contentToCapture.style.flexDirection = 'column';
+      contentToCapture.style.alignItems = 'center';
+      contentToCapture.style.justifyContent = 'center';
+      contentToCapture.style.padding = '1rem';
+      contentToCapture.style.backgroundColor = 'transparent'; // Fond transparent
       
-      // Ajouter le clone au conteneur temporaire
-      tempDiv.appendChild(clone);
+      // Cloner la carte de rappel
+      const reminderCard = document.querySelector('.reminder-card')?.cloneNode(true) as HTMLElement;
+      if (!reminderCard) throw new Error("Impossible de trouver la carte de rappel");
+      
+      // Ajuster les styles de la carte pour la capture
+      reminderCard.style.margin = '0';
+      reminderCard.style.maxWidth = '100%';
+      reminderCard.style.width = '100%';
+      
+      // Ajouter la carte au conteneur de contenu
+      contentToCapture.appendChild(reminderCard);
+      
+      // Ajouter le contenu au conteneur principal
+      captureContainer.appendChild(contentToCapture);
+      
+      // Ajouter le tout au document
+      document.body.appendChild(captureContainer);
       
       // Attendre que le DOM se mette à jour
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Créer un canvas avec html2canvas
-      const canvas = await html2canvas(clone, {
-        backgroundColor: '#111827', // Fond solide pour éviter la transparence
+      // Créer un canvas pour la composition finale
+      const compositionCanvas = document.createElement('canvas');
+      compositionCanvas.width = window.innerWidth * 2; // Haute résolution
+      compositionCanvas.height = window.innerHeight * 2;
+      const compositionCtx = compositionCanvas.getContext('2d');
+      
+      if (!compositionCtx) throw new Error('Impossible de créer le contexte du canvas');
+      
+      // Dessiner le fond d'abord
+      if (bgCanvas) {
+        compositionCtx.drawImage(bgCanvas, 0, 0, compositionCanvas.width, compositionCanvas.height);
+      } else {
+        // Fallback si le chargement du fond a échoué
+        compositionCtx.fillStyle = '#111827';
+        compositionCtx.fillRect(0, 0, compositionCanvas.width, compositionCanvas.height);
+      }
+      
+      // Capturer uniquement le contenu (sans le fond)
+      const contentCanvas = await html2canvas(contentToCapture, {
         scale: 2, // Qualité plus élevée
         useCORS: true,
         logging: true,
         allowTaint: true,
-        removeContainer: true,
+        backgroundColor: 'transparent',
         onclone: (document, element) => {
-          // S'assurer que les éléments ont un fond solide
+          // S'assurer que les éléments ont un fond transparent
           const elements = element.querySelectorAll('*');
           elements.forEach(el => {
-            const style = window.getComputedStyle(el);
-            if (style.backgroundColor === 'rgba(0, 0, 0, 0)' || style.backgroundColor === 'transparent') {
-              (el as HTMLElement).style.backgroundColor = '#111827';
-            }
+            (el as HTMLElement).style.backgroundColor = 'transparent';
           });
         }
       });
       
+      // Dessiner le contenu par-dessus le fond
+      compositionCtx.drawImage(contentCanvas, 0, 0, compositionCanvas.width, compositionCanvas.height);
+      
+      // Utiliser le canvas final
+      const canvas = compositionCanvas;
+      
       // Nettoyer
-      document.body.removeChild(tempDiv);
+      document.body.removeChild(captureContainer);
       
-      // Réafficher les boutons après la capture
-      buttons.forEach(btn => {
-        btn.classList.remove('hidden');
-      });
+      // Créer un nouveau canvas pour l'image finale
+      const outputCanvas = document.createElement('canvas');
+      outputCanvas.width = canvas.width;
+      outputCanvas.height = canvas.height;
+      const outputCtx = outputCanvas.getContext('2d');
       
-      // Créer un nouveau canvas avec un fond solide
-      const finalCanvas = document.createElement('canvas');
-      finalCanvas.width = canvas.width;
-      finalCanvas.height = canvas.height;
-      const ctx = finalCanvas.getContext('2d');
-      
-      if (!ctx) throw new Error('Impossible de créer le contexte du canvas');
+      if (!outputCtx) throw new Error('Impossible de créer le contexte du canvas');
       
       // Remplir avec la couleur de fond
-      ctx.fillStyle = '#111827';
-      ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+      outputCtx.fillStyle = '#111827';
+      outputCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
       
       // Dessiner l'image capturée par-dessus
-      ctx.drawImage(canvas, 0, 0);
+      outputCtx.drawImage(canvas, 0, 0);
       
       // Convertir en URL de données
-      const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.9);
+      const dataUrl = outputCanvas.toDataURL('image/jpeg', 0.9);
       
       // Partager ou télécharger l'image
       await shareImage(dataUrl);
