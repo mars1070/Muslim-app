@@ -20,33 +20,105 @@ const ShareButton: React.FC<ShareButtonProps> = ({ reminder }) => {
       // Convertir dataUrl en blob
       const response = await fetch(dataUrl);
       const blob = await response.blob();
-      const file = new File([blob], 'rappel-islamique.jpg', { type: 'image/jpeg' });
-
-      // Vérifier si l'API Web Share est disponible
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Rappel Islamique',
-          text: 'Découvrez ce rappel spirituel',
+      
+      // Créer un nom de fichier avec la date actuelle
+      const fileName = `rappel-islamique-${new Date().toISOString().split('T')[0]}.jpg`;
+      
+      // Vérifier si on est sur iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      
+      // Pour iOS, utiliser une approche spécifique
+      if (isIOS) {
+        // Créer un nouvel objet URL pour le blob
+        const blobUrl = URL.createObjectURL(blob);
+        
+        // Essayer d'abord avec l'API Web Share standard
+        if (navigator.share) {
+          try {
+            // Essayer avec un fichier (iOS 13+)
+            if (navigator.canShare && navigator.canShare({ files: [new File([], 'test.jpg')] })) {
+              const file = new File([blob], fileName, { type: 'image/jpeg' });
+              await navigator.share({
+                files: [file],
+                title: 'Rappel Islamique',
+                text: 'Découvrez ce rappel spirituel',
+              });
+            } else {
+              // Fallback pour iOS 12+ (sans support des fichiers)
+              await navigator.share({
+                title: 'Rappel Islamique',
+                text: 'Découvrez ce rappel spirituel',
+                url: blobUrl
+              });
+            }
+            URL.revokeObjectURL(blobUrl);
+            return;
+          } catch (shareError) {
+            console.log('Le partage iOS a échoué, tentative de téléchargement', shareError);
+            // Continuer vers le téléchargement si le partage échoue
+          }
+        }
+        
+        // Fallback pour iOS : Créer un lien de téléchargement
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        
+        // Déclencher le téléchargement
+        const clickEvent = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
         });
-      } else {
-        // Fallback pour les navigateurs ne supportant pas le partage de fichiers
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = `rappel-islamique-${new Date().toISOString().split('T')[0]}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        link.dispatchEvent(clickEvent);
+        
+        // Nettoyage
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+        
+        return;
       }
-    } catch (error) {
-      console.error('Erreur lors du partage:', error);
-      // Fallback en cas d'échec
+      
+      // Pour les autres navigateurs (Android, Desktop)
+      if (navigator.share) {
+        try {
+          // Essayer avec l'API Web Share standard
+          if (navigator.canShare && navigator.canShare({ files: [new File([], 'test.jpg')] })) {
+            const file = new File([blob], fileName, { type: 'image/jpeg' });
+            await navigator.share({
+              files: [file],
+              title: 'Rappel Islamique',
+              text: 'Découvrez ce rappel spirituel',
+            });
+          } else {
+            await navigator.share({
+              title: 'Rappel Islamique',
+              text: 'Découvrez ce rappel spirituel',
+              url: dataUrl
+            });
+          }
+          return;
+        } catch (shareError) {
+          console.log('Le partage a échoué, tentative de téléchargement', shareError);
+        }
+      }
+      
+      // Fallback pour tous les navigateurs : Téléchargement direct
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = `rappel-islamique-${new Date().toISOString().split('T')[0]}.jpg`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      
+    } catch (error) {
+      console.error('Erreur lors du partage:', error);
+      // Dernier recours : ouvrir l'image dans un nouvel onglet
+      window.open(dataUrl, '_blank');
     }
   };
 
@@ -65,25 +137,81 @@ const ShareButton: React.FC<ShareButtonProps> = ({ reminder }) => {
         btn.classList.add('hidden');
       });
       
-      // Attendre un court instant pour que le DOM se mette à jour
+      // Créer un conteneur temporaire pour la capture
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'fixed';
+      tempDiv.style.left = '0';
+      tempDiv.style.top = '0';
+      tempDiv.style.width = '100%';
+      tempDiv.style.height = '100%';
+      tempDiv.style.backgroundColor = '#111827'; // Couleur de fond unie
+      tempDiv.style.zIndex = '9999';
+      tempDiv.style.display = 'flex';
+      tempDiv.style.justifyContent = 'center';
+      tempDiv.style.alignItems = 'center';
+      tempDiv.style.opacity = '0';
+      document.body.appendChild(tempDiv);
+      
+      // Cloner l'élément à capturer
+      const clone = elementToCapture.cloneNode(true) as HTMLElement;
+      clone.style.width = window.innerWidth + 'px';
+      clone.style.height = 'auto';
+      clone.style.position = 'relative';
+      clone.style.transform = 'none';
+      clone.style.margin = '0';
+      clone.style.padding = '0';
+      
+      // Ajouter le clone au conteneur temporaire
+      tempDiv.appendChild(clone);
+      
+      // Attendre que le DOM se mette à jour
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Créer un canvas avec html2canvas
-      const canvas = await html2canvas(elementToCapture as HTMLElement, {
-        backgroundColor: null,
+      const canvas = await html2canvas(clone, {
+        backgroundColor: '#111827', // Fond solide pour éviter la transparence
         scale: 2, // Qualité plus élevée
         useCORS: true,
         logging: true,
-        allowTaint: true
+        allowTaint: true,
+        removeContainer: true,
+        onclone: (document, element) => {
+          // S'assurer que les éléments ont un fond solide
+          const elements = element.querySelectorAll('*');
+          elements.forEach(el => {
+            const style = window.getComputedStyle(el);
+            if (style.backgroundColor === 'rgba(0, 0, 0, 0)' || style.backgroundColor === 'transparent') {
+              (el as HTMLElement).style.backgroundColor = '#111827';
+            }
+          });
+        }
       });
+      
+      // Nettoyer
+      document.body.removeChild(tempDiv);
       
       // Réafficher les boutons après la capture
       buttons.forEach(btn => {
         btn.classList.remove('hidden');
       });
       
+      // Créer un nouveau canvas avec un fond solide
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = canvas.width;
+      finalCanvas.height = canvas.height;
+      const ctx = finalCanvas.getContext('2d');
+      
+      if (!ctx) throw new Error('Impossible de créer le contexte du canvas');
+      
+      // Remplir avec la couleur de fond
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+      
+      // Dessiner l'image capturée par-dessus
+      ctx.drawImage(canvas, 0, 0);
+      
       // Convertir en URL de données
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.9);
       
       // Partager ou télécharger l'image
       await shareImage(dataUrl);

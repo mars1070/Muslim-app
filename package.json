@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "vercel-build": "npm run build"
+    "vercel-build": "npm run build",
+    "netlify-build": "npm install && npm run build"
   },
   "dependencies": {
     "firebase": "^12.5.0",
